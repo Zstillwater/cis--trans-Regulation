@@ -86,8 +86,8 @@ done < sample.txt
 ### 3.Psuedo-genome preparing and new transcript screening
 Based on the identified high-quality SNPs information on chromosome, we create a pseudo-genome by replacing reference genome bases to extract transcript sequence. 
 ```
- python changeGenomeVcf.py pseudo-genome.fa Tx2094.csv Tx2094
- python changeGenomeVcf.py pseudo-genome.fa Tx2094.csv Tx2094
+ python changeGenomeVcf.py pseudo-genome.fa Tx2094.txt Tx2094
+ python changeGenomeVcf.py pseudo-genome.fa Tx2094.txt Tx2094
 
 #Identification of protein coding ability using CPC2 software (version 2.0 http://cpc2.gao-lab.org/download.php). 
  python CPC2.py -i new.transcripts.fa -o output.txt    #33,996 transcripts coding
@@ -103,17 +103,12 @@ We used 140,998 transcripts (including 107,002 reference transcripts and 33,996 
  kallisto index -i MT.idx MT.tran.fa
  ls *clean.fa.gz| while read line
 do
-  index=MT.idx
-  gtf=new_transcript1.gff3
-  Chr=chrom.txt
-  output=${line}
-  mkdir ${line}
-  kallisto quant $reads1 $reads2 -i $index -o $output --bias -t 4 -b 100 --pseudobam --genomebam -g $gtf -c $Chr
+ index=MT.idx
+ gtf=new_transcript1.gff3
+ Chr=chrom.txt
+ output=${line}
+ mkdir ${line}
+ kallisto quant $reads1 $reads2 -i $index -o $output --bias -t 4 -b 100 --pseudobam --genomebam -g $gtf -c $Chr
   
 done
-
-  
-
-
-
-
+```
