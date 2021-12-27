@@ -89,7 +89,7 @@ Based on the identified high-quality SNPs information on chromosome, we create a
  python changeGenomeVcf.py pseudo-genome.fa Tx2094.csv Tx2094
  python changeGenomeVcf.py pseudo-genome.fa Tx2094.csv Tx2094
 
-#Identification of protein coding ability
+#Identification of protein coding ability using CPC2 software (version 2.0 http://cpc2.gao-lab.org/download.php). 
  python CPC2.py -i new.transcripts.fa -o output.txt    #33,996 transcripts coding
 ```
 ### 4. Run Kallisato mapping
