@@ -55,7 +55,7 @@ done
  # Generate snp.list file, about 100,254 SNPs on chromosome
  python ExtractVCF.py SNP all.snp.filtered.pass.vcf 
  # Generate high-quality allelic SNPs 
- python pop-specificSNPs.py -g group.txt -Q1 Q1 -Q2 Q2 -hom snp.list 
+ python pop-specificSNPs.py -g group.txt -Q1 Q1 -Q2 Q2 -hom snp.list   #Q1 & Q2 Represent two different parents
 
 ```
 ### 2.Run stringtie and identify new transcripts
@@ -84,7 +84,7 @@ done < sample.txt
  gffread -w transcripts.fa -g Ghirsutum_527_v2.0.fa new_transcript.gff3
 ```
 ### 3.Psuedo-genome preparing and new transcript screening
-Based on the identified high-quality SNPs information on chromosome, we create a pseudo-genome by replacing reference genome bases to extract transcript sequence. 
+Based on the identified high-quality SNPs (_SNP.txt_) information on chromosome, we create a pseudo-genome by replacing reference genome bases to extract transcript sequence. 
 ```
  python changeGenomeVcf.py pseudo-genome.fa Tx2094.txt Tx2094
  python changeGenomeVcf.py pseudo-genome.fa Tx2094.txt Tx2094
