@@ -9,7 +9,7 @@ RNA-seq libraries were generated for LD and SD leaf from wild and domesticated G
 
 **·** 3-6 biological replicates
 ## RNA-seq mapping and high-quality SNP identification between parents
-Filtered RNA-seq reads were mapped against *G. hirsutum* (TM-1) to estimate gene expressions in different accessions using Hisat2.0 and Kallisato. In order to distinguish Maxxa(Ma) and TX2094(Tx), we used GATK(4.0.0.0) to detect allelic SNPs and selected high-quality SNPs on chromosomes based three criteria:
+Filtered RNA-seq reads were mapped against *G. hirsutum* (TM-1) to estimate gene expressions in different accessions using Kallisato,  which psuedo-transcripts comes from hisat2.0 and strintie. In order to distinguish Maxxa(Ma) and TX2094(Tx), we used GATK(4.0.0.0) to detect allelic SNPs and selected high-quality SNPs on chromosomes based three criteria:
 
 1) At least 3 of a single parent material are of non-NN type;
 2) No more than one-third of the abnormal genotypes in a single parent material;
@@ -19,12 +19,12 @@ Filtered RNA-seq reads were mapped against *G. hirsutum* (TM-1) to estimate gene
 In order to obtain high-confidence allelic SNPs between parents, a total of 41 samples (including 16 fiber samples (Bao et al. 2019) and 25 leaves samples) were used.
 
 ```
- while read line
-do
+ hisat2-build  Ghirsutum_527_v2.0.fa Ghir_tran
+ls *fq.gz |while read line
  reads1=fasta/${line}_1.clean.fq.gz
  reads2=fasta/${line}_2.clean.fq.gz
- index=~/UTX/Ghir_tran
- genome=~/UTX/Ghirsutum_527_v2.0.fa
+ index=Ghir_tran
+ genome=Ghirsutum_527_v2.0.fa
 
  hisat2 -p 8 --dta --min-intronlen 50 --max-intronlen 50000 -x $index -1 $reads1 -2 $reads2 -S ${line}.sam
  samtools sort -@ 8 ${line}.sam | samtools view -bhF 12 -q 30 > ${line}.unique.bam
@@ -40,7 +40,7 @@ do
  gatk HaplotypeCaller -R $genome -I ${line}.splited.added.bam -dont-use-soft-clipped-bases -stand-call-conf 20.0 -ERC GVCF -G StandardAnnotation -G AS_StandardAnnotation -O ${line}.g.vcf
  rm ${line}.sam
  rm ${line}.bam
-done < sample.txt
+done 
 # Merge and convert 
  gatk CombineGVCFs -R $genome --variant gvcf.list -O all.g.vcf
  gatk GenotypeGVCFs -R $genome -V all.g.vcf -O all.vcf
@@ -58,6 +58,61 @@ done < sample.txt
  python pop-specificSNPs.py -g group.txt -Q1 Q1 -Q2 Q2 -hom snp.list 
 
 ```
+### 2.Run stringtie and identify new transcripts
+```
+ while read line
+do
+ stringtie -p 8 -f 0.1 -at -j 10 -G Ghirsutum_527_v2.1.gene_exons.gtf -o ${line}.gtf -i ${line}.unique.bam
+ samtools flagstat ${line}.unique.bam >${line}.txt
+done < sample.txt
+stringtie --merge -p 8 -f 0.1 -F -T -i -G Ghirsutum_527_v2.1.gene_exons.gtf -o stringtie_merged.gtf mergelist.txt # mergelist file
+
+ while read line 
+do
+ stringtie -e -B -p 8 -G stringtie_merged.gtf -o ballgown/${line}/${line}.gtf ${line}.unique.bam
+done < sample.txt
+# We merged the gtf files of a single sample i the ballgown folder for subsequent identification of new transcripts.
+ stringtie --merge -p 8 -f 0.1 -c 0.05 -F 1 -T -i -G Ghirsutum_527_v2.1.gene_exons.gtf -o merged.gtf mergelist.txt  # mergelist file
+
+#Comparison of assembly transcripts and referwnce annotation transcripts. The identification of new transcripts must meet: 1)coding protein; 2)covering 70% of the coding  sequence of the reference gene.
+ gffcompare -r Ghirsutum_527_v2.1.gene_exons.gff3 -G merged1.gtf
+ awk -F '\t' '{if($4=="=") print $0}' gffcmp.tracking >reference_transcript.txt  #107,002 transcripts 
+ awk -F '\t' '{if($4=="c"|| $4=="k"|| $4=="m"|| $4=="n"|| $4=="j" ) print $0}' gffcmp.tracking >new_transcript.txt  #41,559 new transcripts
+ cut -f 3 new_transcript.txt >new_transcript_id.txt
+ awk -F '\t' 'NR==FNR{a[$0]}NR>FNR{if($1 in a)print $0 }' new_transcript_id.txt merged.gtf >new_merged.gtf
+ gffread new_merged.gtf -o new_transcript.gff3 
+ gffread -w transcripts.fa -g Ghirsutum_527_v2.0.fa new_transcript.gff3
+```
+### 3.Psuedo-genome preparing and new transcript screening
+Based on the identified high-quality SNPs information on chromosome, we create a pseudo-genome by replacing reference genome bases to extract transcript sequence. 
+```
+ python changeGenomeVcf.py pseudo-genome.fa Tx2094.csv Tx2094
+ python changeGenomeVcf.py pseudo-genome.fa Tx2094.csv Tx2094
+
+#Identification of protein coding ability
+ python CPC2.py -i new.transcripts.fa -o output.txt    #33,996 transcripts coding
+```
+### 4. Run Kallisato mapping
+We used 140,998 transcripts (including 107,002 reference transcripts and 33,996 new trancsripts) to make the mapping database.
+```
+ gffread -w transcripts.fa -g $genome new_transcript1.gff3
+ sed 's/>/>Ma_/g' Maxxa.fa >Maxxa.tran.fa
+ sed 's/>/>Tx_/g' Tx2094.fa >Tx2094.tran.fa
+ cat Maxxa.tran.fa Tx2094.tran.fa >MT.tran.fa
+#build index
+ kallisto index -i MT.idx MT.tran.fa
+ ls *clean.fa.gz| while read line
+do
+  index=MT.idx
+  gtf=new_transcript1.gff3
+  Chr=chrom.txt
+  output=${line}
+  mkdir ${line}
+  kallisto quant $reads1 $reads2 -i $index -o $output --bias -t 4 -b 100 --pseudobam --genomebam -g $gtf -c $Chr
+  
+done
+
+  
 
 
 
