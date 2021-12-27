@@ -1,0 +1,7 @@
+ #CHROM  POS     REF     Maxxa   TX2094
+    A01     14855   A       A       G
+    A01     35305   T       T       C
+    A01     37221   C       C       A
+    A01     39544   T       T       C
+    A01     39777   G       G       T
+    A01     42033   T       T       A
