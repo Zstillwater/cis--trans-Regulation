@@ -3,7 +3,7 @@ Cis and trans regulatory evolution of cotton flowering time control
 ## Experimental Design
 RNA-seq libraries were generated for LD and SD leaf from wild and domesticated Gossypium hirsutum accessions and their reciprocal F1 hybrids each with three replicates under long-day and short-day conditions:
 
-**·** 2 condition: LD (7am & 9pm)& SD (7am &5 pm)
+**·** 2 condition: LD (7am & 9pm) & SD (7am & 5pm)
  
 **·** 4 cotton accessions: Maxxa, TX2094, reciprocal F1 hybrids MxT and TxM
 
@@ -20,7 +20,7 @@ In order to obtain high-confidence allelic SNPs between parents, a total of 41 s
 
 ```
  hisat2-build  Ghirsutum_527_v2.0.fa Ghir_tran
-ls *fq.gz |while read line
+ ls *fq.gz |while read line
  reads1=fasta/${line}_1.clean.fq.gz
  reads2=fasta/${line}_2.clean.fq.gz
  index=Ghir_tran
