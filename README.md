@@ -19,6 +19,8 @@ Filtered RNA-seq reads were mapped against *G. hirsutum* (TM-1) to estimate gene
 In order to obtain high-confidence allelic SNPs between parents, a total of 41 samples (including 16 fiber samples (Bao et al. 2019) and 25 leaves samples) were used.
 
 ```
+while read line
+do
  hisat2-build  Ghirsutum_527_v2.0.fa Ghir_tran
  ls *fq.gz |while read line
  reads1=fasta/${line}_1.clean.fq.gz
@@ -49,7 +51,7 @@ done
  # Extract SNP information
  gatk SelectVariants --select-type-to-include SNP -R $genome -V gatk.recode.vcf -O all.snp.vcf
  # Base quality filtering
- gatk VariantFiltration -R $genome -V all.snp.vcf -window 35 -cluster 3 \-filter-name FS -filter "FS > 30.0" -filter-name QD -filter "QD < 2.0" -O all.snp.filtered.vcf
+ gatk VariantFiltration -R $genome -V all.snp.vcf -window 35 -cluster 3 --filter-name FS -filter "FS > 30.0" --filter-name QD -filter "QD < 2.0" -O all.snp.filtered.vcf
  # Filter through PASS and biased allelic SNP  
  bcftools view --threads 4 -m1 -M2 -f PASS all.snp.filtered.vcf |sed 's/|/\//g' >all.snp.filtered.pass.vcf
  # Generate snp.list file, about 100,254 SNPs on chromosome
